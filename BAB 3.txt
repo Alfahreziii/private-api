@@ -1,0 +1,291 @@
+step step tugas IAI (BAB 3)
+
+1. composer create-project codeigniter4/appstarter siakad-api
+
+2. 
+database.default.hostname = localhost
+database.default.database = siakad_db
+database.default.username = root
+database.default.password =
+database.default.DBDriver = MySQLi
+
+3. php spark make:model MahasiswaModel
+
+4. php spark make:migration mahasiswa
+
+5.mahasiswa migration
+public function up()
+    {
+        $this->forge->addField([
+            'id' => [
+                'type'           => 'INT',
+                'constraint'     => 11,
+                'unsigned'       => true,
+                'auto_increment' => true,
+            ],
+            'nama' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '255',
+            ],
+            'nim' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '15',
+            ],
+            'email' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '15',
+            ],
+            'created_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+        ]);
+
+        $this->forge->addKey('id', true);
+        $this->forge->createTable('mahasiswa');
+    }
+
+    public function down()
+    {
+        $this->forge->dropTable('mahasiswa');
+    }
+
+6. php spark migrate
+
+7. Model mahasiswa
+<?php
+
+namespace App\Models;
+use CodeIgniter\Model;
+
+class MahasiswaModel extends Model
+{
+    protected $table = 'mahasiswa';
+    protected $primaryKey = 'id';
+    protected $allowedFields = ['nim', 'nama', 'email', 'jurusan'];
+}
+
+8. php spark make:controller api/Mahasiswa
+
+9. Controller mahasiswa
+<?php
+
+namespace App\Controllers\API;
+use CodeIgniter\RESTful\ResourceController;
+
+class Mahasiswa extends ResourceController
+{
+    protected $modelName = 'App\Models\MahasiswaModel';
+    protected $format = 'json';
+
+    public function index()
+    {
+        return $this->respond($this->model->findAll());
+    }
+    public function show($id = null)
+    {
+        $data = $this->model->find($id);
+        if ($data) {
+            return $this->respond($data);
+        } else {
+            return $this->failNotFound('Data Mahasiswa Tidak Ditemukan');
+        }
+    }
+
+    public function create()
+    {
+        $data = $this->request->getJSON();
+        $this->model->insert($data);
+        return $this->respondCreated($data, 'Mahasiswa Berhasil Ditambahkan');
+    }
+
+    public function update($id = null)
+    {
+        $data = $this->request->getJSON();
+        $this->model->update($id, $data);
+        return $this->respond($data, 200, 'Mahasiswa Berhasil Diupdate');
+    }
+
+    public function delete($id = null)
+    {
+        $this->model->delete($id);
+        return $this->respondDeleted(['id' => $id, 'message' => 'Mahasiswa Berhasil Dihapus']);
+    }
+}
+
+10. Routes mahasiswa
+$routes->group('api', function ($routes) {
+    $routes->resource('mahasiswa', ['controller' => 'API\Mahasiswa']);
+});
+
+11. instalasi library jwt
+composer require firebase/php-jwt
+
+12. php spark make:model UserModel
+
+13. model user
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class UserModel extends Model
+{
+    protected $table      = 'users'; // Nama tabel di database
+    protected $primaryKey = 'id'; // Primary key tabel
+
+    protected $allowedFields = ['username', 'email', 'password', 'created_at', 'updated_at'];
+
+    protected $useTimestamps = true; // Aktifkan created_at & updated_at
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+
+    protected $returnType    = 'array'; // Format data yang dikembalikan
+}
+
+13. php spark make:migration Users
+
+14. Migration users
+<?php
+
+namespace App\Database\Migrations;
+
+use CodeIgniter\Database\Migration;
+
+class Users extends Migration
+{
+    public function up()
+    {
+        $this->forge->addField([
+            'id' => [
+                'type'           => 'INT',
+                'constraint'     => 11,
+                'unsigned'       => true,
+                'auto_increment' => true,
+            ],
+            'username' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '100',
+            ],
+            'email' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '150',
+                'unique'     => true,
+            ],
+            'password' => [
+                'type' => 'VARCHAR',
+                'constraint' => '255',
+            ],
+            'created_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'updated_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+        ]);
+
+        $this->forge->addKey('id', true);
+        $this->forge->createTable('users');
+    }
+
+    public function down()
+    {
+        $this->forge->dropTable('users');
+    }
+}
+
+15. membuat seeder untuk user
+<?php
+
+namespace App\Database\Seeds;
+
+use CodeIgniter\Database\Seeder;
+use App\Models\UserModel;
+
+class UserSeeder extends Seeder
+{
+    public function run()
+    {
+        $userModel = new UserModel();
+
+        // Data user yang akan dimasukkan
+        $data = [
+            'username' => 'user',
+            'email'    => 'user@example.com',
+            'password' => password_hash('password123', PASSWORD_BCRYPT), // Hash password sebelum disimpan
+        ];
+
+        // Insert data ke database
+        $userModel->insert($data);
+    }
+}
+
+
+16.Buat file jwt_helper.php di folder app/Helpers/:
+<?php
+
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
+function createJWT($user)
+{
+    $key = "secret_key";
+    $payload = [
+        "iss" => "localhost",
+        "aud" => "localhost",
+        "iat" => time(),
+        "exp" => time() + 3600,
+        "data" => $user
+    ];
+    return JWT::encode($payload, $key, 'HS256');
+}
+
+function validateJWT($token)
+{
+    try {
+        $key = "secret_key";
+        return JWT::decode($token, new Key($key, 'HS256'));
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
+17. php spark make:controller api/auth
+<?php
+
+namespace App\Controllers\API;
+use CodeIgniter\RESTful\ResourceController;
+use App\Models\UserModel;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
+class Auth extends ResourceController
+{
+    public function login()
+    {
+        $model = new UserModel();
+        $email = $this->request->getVar('email');
+        $password = $this->request->getVar('password');
+        $user = $model->where('email', $email)->first();
+
+        if (!$user || !password_verify($password, $user['password'])) {
+            return $this->failUnauthorized('Email atau password salah');
+        }
+
+        $token = createJWT($user);
+        return $this->respond(['token' => $token]);
+    }
+}
+
+18. menambahkan app/config/Autoload
+public $helpers = ['jwt_helper']; 
+
+19. Routes auth
+$routes->post('api/login', 'API\Auth::login');
