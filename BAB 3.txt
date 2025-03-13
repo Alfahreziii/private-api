@@ -201,7 +201,8 @@ class Users extends Migration
     }
 }
 
-15. membuat seeder untuk user
+15. php spark make:seeder UserSeeder
+16. membuat seeder untuk user
 <?php
 
 namespace App\Database\Seeds;
@@ -228,7 +229,8 @@ class UserSeeder extends Seeder
 }
 
 
-16.Buat file jwt_helper.php di folder app/Helpers/:
+17. php spark db:seed UserSeeder
+18. Buat file jwt_helper.php di folder app/Helpers/:
 <?php
 
 use Firebase\JWT\JWT;
@@ -257,7 +259,7 @@ function validateJWT($token)
     }
 }
 
-17. php spark make:controller api/auth
+19. php spark make:controller api/auth
 <?php
 
 namespace App\Controllers\API;
@@ -284,8 +286,35 @@ class Auth extends ResourceController
     }
 }
 
-18. menambahkan app/config/Autoload
+20. menambahkan app/config/Autoload
 public $helpers = ['jwt_helper']; 
 
-19. Routes auth
+21. file app/controller/api/Auth.php di ubah 
+<?php
+
+namespace App\Controllers\API;
+use CodeIgniter\RESTful\ResourceController;
+use App\Models\UserModel;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
+class Auth extends ResourceController
+{
+    public function login()
+    {
+        $model = new UserModel();
+        $email = $this->request->getVar('email');
+        $password = $this->request->getVar('password');
+        $user = $model->where('email', $email)->first();
+
+        if (!$user || !password_verify($password, $user['password'])) {
+            return $this->failUnauthorized('Email atau password salah');
+        }
+
+        $token = createJWT($user);
+        return $this->respond(['token' => $token]);
+    }
+}
+
+22. Routes auth
 $routes->post('api/login', 'API\Auth::login');
