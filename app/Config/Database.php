@@ -26,7 +26,7 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-        'hostname'     => 'mysql.railway.internal',
+        'hostname'     => 'turntable.proxy.rlwy.net',
         'username'     => 'root',
         'password'     => 'VxePkAhlXGKQDWoJofhzHjLJtNJBJLeT',
         'database'     => 'railway',
@@ -41,7 +41,7 @@ class Database extends Config
         'compress'     => false,
         'strictOn'     => false,
         'failover'     => [],
-        'port'         => 3306,
+        'port'         => 59885,
         'numberNative' => false,
         'foundRows'    => false,
         'dateFormat'   => [
